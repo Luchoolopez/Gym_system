@@ -15,7 +15,9 @@ app.listen(config.port, async () => {
     try {
         await connectWithRetry();
         console.log('DB conectado');
-        await sequelize.sync({ alter: true });
+        // Sin { alter: true }: en MySQL duplica los índices UNIQUE en cada reinicio.
+        // El esquema es responsabilidad de db/init-01.sql (docker compose down -v para regenerarlo).
+        await sequelize.sync();
     } catch (error) {
         console.error('Error conectando a la DB: ', error);
     }
