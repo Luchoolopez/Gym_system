@@ -19,17 +19,17 @@ interface UserAttributes {
 interface UserCreationAttributes extends Optional<UserAttributes, "id" | "dni" | "phone" | "is_active" | "created_at" | "updated_at"> {}
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-    public declare id!: number;
-    public declare role_id!: number;
-    public declare first_name!: string;
-    public declare last_name!: string;
-    public declare email!: string;
-    public declare password_hash!: string;
+    public declare id: number;
+    public declare role_id: number;
+    public declare first_name: string;
+    public declare last_name: string;
+    public declare email: string;
+    public declare password_hash: string;
     public declare dni?: string;
     public declare phone?: string;
-    public declare is_active!: boolean;
-    public declare readonly created_at!: Date;
-    public declare readonly updated_at!: Date;
+    public declare is_active: boolean;
+    public declare readonly created_at: Date;
+    public declare readonly updated_at: Date;
 
     // Disponible cuando se incluye la asociación 'role'
     public declare readonly role?: Role;

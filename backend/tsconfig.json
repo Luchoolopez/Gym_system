@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    // "bundler" resuelve imports sin extensión, igual que tsx (que es quien ejecuta el código)
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "target": "esnext",
     "lib": ["esnext"],
     "types": ["node"],
-    "rootDir": "./src",
-    "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    // tsc se usa solo para chequear tipos; el código lo ejecuta tsx
+    "noEmit": true
   },
   "include": ["src"]
 }

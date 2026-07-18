@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from "sequelize";
+﻿import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 import { MembershipPlan } from "./MembershipPlan.model";
 import { User } from "./User.model";
@@ -17,14 +17,14 @@ interface UserSubscriptionAttributes {
 interface UserSubscriptionCreationAttributes extends Optional<UserSubscriptionAttributes, "id" | "classes_used" | "payment_status" | "created_at"> {}
 
 export class UserSubscription extends Model<UserSubscriptionAttributes, UserSubscriptionCreationAttributes> implements UserSubscriptionAttributes {
-    public declare id!: number;
-    public declare user_id!: number;
-    public declare plan_id!: number;
-    public declare start_date!: string;
-    public declare end_date!: string;
-    public declare classes_used!: number;
-    public declare payment_status!: 'PENDING' | 'PAID' | 'CANCELLED';
-    public declare readonly created_at!: Date;
+    public declare id: number;
+    public declare user_id: number;
+    public declare plan_id: number;
+    public declare start_date: string;
+    public declare end_date: string;
+    public declare classes_used: number;
+    public declare payment_status: 'PENDING' | 'PAID' | 'CANCELLED';
+    public declare readonly created_at: Date;
 
     // Disponibles cuando se incluyen las asociaciones
     public declare readonly plan?: MembershipPlan;

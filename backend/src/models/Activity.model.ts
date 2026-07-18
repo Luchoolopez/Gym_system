@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from "sequelize";
+﻿import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 
 interface ActivityAttributes {
@@ -12,11 +12,11 @@ interface ActivityAttributes {
 interface ActivityCreationAttributes extends Optional<ActivityAttributes, "id" | "description" | "is_active" | "created_at"> {}
 
 export class Activity extends Model<ActivityAttributes, ActivityCreationAttributes> implements ActivityAttributes {
-    public declare id!: number;
-    public declare name!: string;
+    public declare id: number;
+    public declare name: string;
     public declare description?: string;
-    public declare is_active!: boolean;
-    public declare readonly created_at!: Date;
+    public declare is_active: boolean;
+    public declare readonly created_at: Date;
 }
 
 Activity.init({

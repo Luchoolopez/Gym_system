@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from "sequelize";
+﻿import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 import { User } from "./User.model";
 
@@ -13,9 +13,9 @@ interface CheckInAttributes {
 interface CheckInCreationAttributes extends Optional<CheckInAttributes, "id" | "check_in_time" | "registered_by" | "notes"> {}
 
 export class CheckIn extends Model<CheckInAttributes, CheckInCreationAttributes> implements CheckInAttributes {
-    public declare id!: number;
-    public declare user_id!: number;
-    public declare readonly check_in_time!: Date;
+    public declare id: number;
+    public declare user_id: number;
+    public declare readonly check_in_time: Date;
     public declare registered_by?: number | null;
     public declare notes?: string;
 

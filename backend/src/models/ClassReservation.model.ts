@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from "sequelize";
+﻿import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 import { Schedule } from "./Schedule.model";
 import { User } from "./User.model";
@@ -18,13 +18,13 @@ interface ClassReservationAttributes {
 interface ClassReservationCreationAttributes extends Optional<ClassReservationAttributes, "id" | "status" | "created_at" | "updated_at"> {}
 
 export class ClassReservation extends Model<ClassReservationAttributes, ClassReservationCreationAttributes> implements ClassReservationAttributes {
-    public declare id!: number;
-    public declare user_id!: number;
-    public declare schedule_id!: number;
-    public declare reservation_date!: string;
-    public declare status!: ReservationStatus;
-    public declare readonly created_at!: Date;
-    public declare readonly updated_at!: Date;
+    public declare id: number;
+    public declare user_id: number;
+    public declare schedule_id: number;
+    public declare reservation_date: string;
+    public declare status: ReservationStatus;
+    public declare readonly created_at: Date;
+    public declare readonly updated_at: Date;
 
     // Disponibles cuando se incluyen las asociaciones
     public declare readonly horario?: Schedule;

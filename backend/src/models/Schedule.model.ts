@@ -20,15 +20,15 @@ interface ScheduleAttributes {
 interface ScheduleCreationAttributes extends Optional<ScheduleAttributes, "id" | "professor_id" | "room" | "capacity" | "is_active"> {}
 
 export class Schedule extends Model<ScheduleAttributes, ScheduleCreationAttributes> implements ScheduleAttributes {
-    public declare id!: number;
-    public declare activity_id!: number;
-    public declare day_of_week!: DayOfWeek;
-    public declare start_time!: string;
-    public declare end_time!: string;
+    public declare id: number;
+    public declare activity_id: number;
+    public declare day_of_week: DayOfWeek;
+    public declare start_time: string;
+    public declare end_time: string;
     public declare professor_id?: number | null;
     public declare room?: string;
     public declare capacity?: number | null;
-    public declare is_active!: boolean;
+    public declare is_active: boolean;
 
     // Disponibles cuando se incluyen las asociaciones
     public declare readonly actividad?: Activity;

@@ -16,14 +16,14 @@ interface PaymentAttributes {
 interface PaymentCreationAttributes extends Optional<PaymentAttributes, "id" | "registered_by" | "notes" | "created_at"> {}
 
 export class Payment extends Model<PaymentAttributes, PaymentCreationAttributes> implements PaymentAttributes {
-    public declare id!: number;
-    public declare subscription_id!: number;
-    public declare amount!: number;
-    public declare payment_method!: 'CASH' | 'TRANSFER' | 'CARD' | 'MERCADOPAGO';
-    public declare payment_date!: string;
+    public declare id: number;
+    public declare subscription_id: number;
+    public declare amount: number;
+    public declare payment_method: 'CASH' | 'TRANSFER' | 'CARD' | 'MERCADOPAGO';
+    public declare payment_date: string;
     public declare registered_by?: number | null;
     public declare notes?: string;
-    public declare readonly created_at!: Date;
+    public declare readonly created_at: Date;
 
     // Disponible cuando se incluye la asociación 'suscripcion'
     public declare readonly suscripcion?: UserSubscription;

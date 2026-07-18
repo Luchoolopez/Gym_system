@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from "sequelize";
+﻿import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 
 interface MembershipPlanAttributes {
@@ -15,14 +15,14 @@ interface MembershipPlanAttributes {
 interface MembershipPlanCreationAttributes extends Optional<MembershipPlanAttributes, "id" | "description" | "class_limit" | "is_active" | "created_at"> {}
 
 export class MembershipPlan extends Model<MembershipPlanAttributes, MembershipPlanCreationAttributes> implements MembershipPlanAttributes {
-    public declare id!: number;
-    public declare name!: string;
+    public declare id: number;
+    public declare name: string;
     public declare description?: string;
-    public declare price!: number;
-    public declare duration_days!: number;
+    public declare price: number;
+    public declare duration_days: number;
     public declare class_limit?: number | null;
-    public declare is_active!: boolean;
-    public declare readonly created_at!: Date;
+    public declare is_active: boolean;
+    public declare readonly created_at: Date;
 }
 
 MembershipPlan.init({
