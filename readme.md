@@ -229,7 +229,9 @@ docker compose up -d --build
 *   **Frontend:** http://localhost:5173 (Vite con hot-reload)
 *   **MySQL:** puerto 3306; los scripts de `./db` se ejecutan solo en la primera creación del volumen (`docker compose down -v` para regenerar la DB desde cero).
 
-Las variables se toman del `.env` de la raíz. Para correr el backend sin Docker: `npm run dev` en `./backend` (usa `backend/.env` con `DB_HOST=localhost`).
+Las variables se toman del `.env` de la raíz (incluida `TZ`, la zona horaria con la que el backend calcula "hoy" y las ventanas de reserva). Para correr el backend sin Docker: `npm run dev` en `./backend` (usa `backend/.env` con `DB_HOST=localhost`).
+
+> ⚠️ Ejecutar `docker compose` siempre **desde la raíz del proyecto**: si se corre desde `./backend`, Compose resuelve las variables con `backend/.env` y el backend queda apuntando a `DB_HOST=localhost` en vez de `db`.
 
 ---
 

@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app.error";
 import { Activity } from "../models/index";
 import { CreateActivityType, UpdateActivityType } from "../validations/activity.validation";
 
@@ -12,7 +13,7 @@ export class ActivityService {
     async getActividadById(activityId: number) {
         const actividad = await Activity.findByPk(activityId);
         if (!actividad) {
-            throw new Error("Actividad no encontrada");
+            throw new AppError("Actividad no encontrada", 404);
         }
         return this.mapToDto(actividad);
     }
@@ -20,7 +21,7 @@ export class ActivityService {
     async createActividad(createData: CreateActivityType) {
         const existing = await Activity.findOne({ where: { name: createData.nombre } });
         if (existing) {
-            throw new Error("Ya existe una actividad con ese nombre");
+            throw new AppError("Ya existe una actividad con ese nombre", 409);
         }
 
         const newActividad = await Activity.create({
@@ -35,7 +36,7 @@ export class ActivityService {
     async updateActividad(activityId: number, updateData: UpdateActivityType) {
         const actividadToUpdate = await Activity.findByPk(activityId);
         if (!actividadToUpdate) {
-            throw new Error("Actividad no encontrada");
+            throw new AppError("Actividad no encontrada", 404);
         }
 
         if (updateData.nombre !== undefined) {
@@ -56,7 +57,7 @@ export class ActivityService {
     async deleteActividad(activityId: number) {
         const actividadToDelete = await Activity.findByPk(activityId);
         if (!actividadToDelete) {
-            throw new Error("Actividad no encontrada");
+            throw new AppError("Actividad no encontrada", 404);
         }
 
         actividadToDelete.is_active = false;

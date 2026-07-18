@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app.error";
 import { Schedule, Activity, User, Role } from "../models/index";
 import { CreateScheduleType, UpdateScheduleType } from "../validations/schedule.validation";
 
@@ -43,7 +44,7 @@ export class ScheduleService {
     async createHorario(createData: CreateScheduleType) {
         const actividad = await Activity.findByPk(createData.actividadId);
         if (!actividad || !actividad.is_active) {
-            throw new Error("Actividad no encontrada");
+            throw new AppError("Actividad no encontrada", 404);
         }
 
         if (createData.profesorId != null) {
@@ -67,13 +68,13 @@ export class ScheduleService {
     async updateHorario(scheduleId: number, updateData: UpdateScheduleType) {
         const horario = await Schedule.findByPk(scheduleId);
         if (!horario) {
-            throw new Error("Horario no encontrado");
+            throw new AppError("Horario no encontrado", 404);
         }
 
         if (updateData.actividadId !== undefined) {
             const actividad = await Activity.findByPk(updateData.actividadId);
             if (!actividad || !actividad.is_active) {
-                throw new Error("Actividad no encontrada");
+                throw new AppError("Actividad no encontrada", 404);
             }
             horario.activity_id = updateData.actividadId;
         }
@@ -105,7 +106,7 @@ export class ScheduleService {
         }
 
         if (horario.end_time <= horario.start_time) {
-            throw new Error("La hora de fin debe ser posterior a la de inicio");
+            throw new AppError("La hora de fin debe ser posterior a la de inicio", 400);
         }
 
         await horario.save();
@@ -116,7 +117,7 @@ export class ScheduleService {
     async deleteHorario(scheduleId: number) {
         const horario = await Schedule.findByPk(scheduleId);
         if (!horario) {
-            throw new Error("Horario no encontrado");
+            throw new AppError("Horario no encontrado", 404);
         }
 
         horario.is_active = false;
@@ -130,10 +131,10 @@ export class ScheduleService {
             include: [{ model: Role, as: 'role' }]
         });
         if (!profesor || !profesor.is_active) {
-            throw new Error("Profesor no encontrado");
+            throw new AppError("Profesor no encontrado", 404);
         }
         if (profesor.role?.name !== 'Profesor' && profesor.role?.name !== 'Admin') {
-            throw new Error("El usuario asignado no es un profesor");
+            throw new AppError("El usuario asignado no es un profesor", 400);
         }
     }
 
@@ -145,7 +146,7 @@ export class ScheduleService {
             ]
         });
         if (!horario) {
-            throw new Error("Horario no encontrado");
+            throw new AppError("Horario no encontrado", 404);
         }
         return this.mapToDto(horario);
     }

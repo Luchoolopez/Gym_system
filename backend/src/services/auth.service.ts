@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app.error";
 import crypto from "crypto";
 import { Op } from "sequelize";
 import { User, Role, PasswordResetToken } from "../models/index";
@@ -10,19 +11,19 @@ export class AuthService {
     async register(registerData: RegisterUserType) {
         const existingUser = await User.findOne({ where: { email: registerData.email } });
         if (existingUser) {
-            throw new Error("El email ya esta registrado");
+            throw new AppError("El email ya esta registrado", 409);
         }
 
         if (registerData.dni) {
             const existingDni = await User.findOne({ where: { dni: registerData.dni } });
             if (existingDni) {
-                throw new Error("El DNI ya esta registrado");
+                throw new AppError("El DNI ya esta registrado", 409);
             }
         }
 
         const userRole = await Role.findOne({ where: { name: 'User' } });
         if (!userRole) {
-            throw new Error("Rol base no encontrado");
+            throw new AppError("Rol base no encontrado", 500);
         }
 
         const hashedPassword = await encrypt(registerData.password);
@@ -51,16 +52,16 @@ export class AuthService {
             include: [{ model: Role, as: 'role' }]
         });
         if (!user || !user.role) {
-            throw new Error("Credenciales invalidas");
+            throw new AppError("Credenciales invalidas", 401);
         }
 
         if (!user.is_active) {
-            throw new Error("Cuenta inactiva");
+            throw new AppError("Cuenta inactiva", 401);
         }
 
         const isValidPassword = await verified(loginData.password, user.password_hash);
         if (!isValidPassword) {
-            throw new Error("Credenciales invalidas");
+            throw new AppError("Credenciales invalidas", 401);
         }
 
         const accessToken = generateToken(user.id, user.role.name);
@@ -76,7 +77,7 @@ export class AuthService {
             include: [{ model: Role, as: 'role' }]
         });
         if (!user || !user.role) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
 
         return this.mapToDto(user, user.role.name);
@@ -88,6 +89,17 @@ export class AuthService {
         if (!user) {
             return { message: "Si el email existe, se generó un token de recuperación" };
         }
+
+        // Limpieza oportunista: se borran los tokens ya usados o vencidos del usuario
+        await PasswordResetToken.destroy({
+            where: {
+                user_id: user.id,
+                [Op.or]: [
+                    { used: true },
+                    { expires_at: { [Op.lt]: new Date() } }
+                ]
+            }
+        });
 
         const token = crypto.randomBytes(32).toString("hex");
         const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
@@ -119,12 +131,12 @@ export class AuthService {
             }
         });
         if (!resetToken) {
-            throw new Error("Token invalido o expirado");
+            throw new AppError("Token invalido o expirado", 400);
         }
 
         const user = await User.findByPk(resetToken.user_id);
         if (!user) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
 
         user.password_hash = await encrypt(resetData.password);

@@ -28,6 +28,7 @@ services:
     container_name: gym_backend
     environment:
       - NODE_ENV=development
+      - TZ=${TZ}
       - PORT=${BACKEND_PORT}
       - DB_HOST=${DB_HOST}
       - DB_USER=${MYSQL_USER}

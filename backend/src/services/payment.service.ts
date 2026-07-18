@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app.error";
 import { Op } from "sequelize";
 import { Payment, UserSubscription, MembershipPlan, User } from "../models/index";
 import { CreatePaymentType } from "../validations/payment.validation";
@@ -60,10 +61,10 @@ export class PaymentService {
     async createPago(adminId: number, createData: CreatePaymentType) {
         const suscripcion = await UserSubscription.findByPk(createData.suscripcionId);
         if (!suscripcion) {
-            throw new Error("Suscripción no encontrada");
+            throw new AppError("Suscripción no encontrada", 404);
         }
         if (suscripcion.payment_status === 'CANCELLED') {
-            throw new Error("No se puede registrar un pago de una suscripción cancelada");
+            throw new AppError("No se puede registrar un pago de una suscripción cancelada", 400);
         }
 
         const nuevoPago = await Payment.create({

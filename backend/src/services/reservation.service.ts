@@ -1,4 +1,6 @@
+import { AppError } from "../utils/app.error";
 import { Op } from "sequelize";
+import { sequelize } from "../config/database";
 import { ClassReservation, Schedule, Activity, User } from "../models/index";
 import { CreateReservationType, AttendanceType } from "../validations/reservation.validation";
 import { findSuscripcionVigente, clasesRestantes } from "./subscription.service";
@@ -28,9 +30,12 @@ export class ReservationService {
             order: [['start_time', 'ASC']]
         });
 
+        // Una sola query agrupada para los cupos de todos los horarios del día (evita N+1)
+        const reservasPorHorario = await this.contarReservasDelDia(horarios.map(h => h.id), fechaConsulta);
+
         const clases = [];
         for (const horario of horarios) {
-            const reservados = await this.contarReservas(horario.id, fechaConsulta);
+            const reservados = reservasPorHorario.get(horario.id) ?? 0;
             clases.push({
                 horarioId: horario.id,
                 fecha: fechaConsulta,
@@ -58,38 +63,38 @@ export class ReservationService {
             include: [{ model: Activity, as: 'actividad' }]
         });
         if (!horario || !horario.is_active) {
-            throw new Error("Horario no encontrado");
+            throw new AppError("Horario no encontrado", 404);
         }
 
         if (diaDeLaSemana(createData.fecha) !== horario.day_of_week) {
-            throw new Error(`La fecha no corresponde al día de la clase (${horario.day_of_week})`);
+            throw new AppError(`La fecha no corresponde al día de la clase (${horario.day_of_week})`, 400);
         }
 
         // Validar suscripción vigente y paga
         const suscripcion = await findSuscripcionVigente(userId);
         if (!suscripcion) {
-            throw new Error("No tenés una suscripción vigente");
+            throw new AppError("No tenés una suscripción vigente", 400);
         }
         if (suscripcion.payment_status !== 'PAID') {
-            throw new Error("Tu suscripción tiene el pago pendiente");
+            throw new AppError("Tu suscripción tiene el pago pendiente", 400);
         }
 
         const restantes = clasesRestantes(suscripcion);
         if (restantes !== null && restantes <= 0) {
-            throw new Error("No te quedan clases disponibles en tu plan");
+            throw new AppError("No te quedan clases disponibles en tu plan", 400);
         }
 
         // Validar estado de la clase (ventana de reserva y cupo)
         const reservados = await this.contarReservas(horario.id, createData.fecha);
         const estado = this.calcularEstado(horario, createData.fecha, reservados);
         if (estado === 'COMPLETA') {
-            throw new Error("La clase está completa");
+            throw new AppError("La clase está completa", 400);
         }
         if (estado === 'CERRADA') {
-            throw new Error("La clase ya cerró sus reservas");
+            throw new AppError("La clase ya cerró sus reservas", 400);
         }
         if (estado === 'EN_CURSO' || estado === 'FINALIZADA') {
-            throw new Error("La clase ya empezó");
+            throw new AppError("La clase ya empezó", 400);
         }
 
         // Si existe una reserva cancelada para la misma clase, se reactiva
@@ -103,7 +108,7 @@ export class ReservationService {
 
         if (existente) {
             if (existente.status !== 'CANCELLED') {
-                throw new Error("Ya tenés una reserva para esta clase");
+                throw new AppError("Ya tenés una reserva para esta clase", 409);
             }
             existente.status = 'RESERVED';
             await existente.save();
@@ -124,16 +129,16 @@ export class ReservationService {
             include: [{ model: Schedule, as: 'horario' }]
         });
         if (!reserva || reserva.user_id !== userId) {
-            throw new Error("Reserva no encontrada");
+            throw new AppError("Reserva no encontrada", 404);
         }
         if (reserva.status !== 'RESERVED') {
-            throw new Error("La reserva no se puede cancelar");
+            throw new AppError("La reserva no se puede cancelar", 400);
         }
 
         const inicio = combinarFechaHora(reserva.reservation_date, reserva.horario!.start_time);
         const cierre = new Date(inicio.getTime() - config.reservationCloseMinutes * 60000);
         if (new Date() >= cierre) {
-            throw new Error("Ya no se puede cancelar la reserva (la clase está por empezar)");
+            throw new AppError("Ya no se puede cancelar la reserva (la clase está por empezar)", 400);
         }
 
         reserva.status = 'CANCELLED';
@@ -161,7 +166,7 @@ export class ReservationService {
             include: [{ model: Activity, as: 'actividad' }]
         });
         if (!horario) {
-            throw new Error("Horario no encontrado");
+            throw new AppError("Horario no encontrado", 404);
         }
 
         const reservas = await ClassReservation.findAll({
@@ -196,10 +201,10 @@ export class ReservationService {
     async marcarAsistencia(reservaId: number, data: AttendanceType) {
         const reserva = await ClassReservation.findByPk(reservaId);
         if (!reserva) {
-            throw new Error("Reserva no encontrada");
+            throw new AppError("Reserva no encontrada", 404);
         }
         if (reserva.status !== 'RESERVED') {
-            throw new Error("La reserva ya fue procesada o está cancelada");
+            throw new AppError("La reserva ya fue procesada o está cancelada", 400);
         }
 
         reserva.status = data.estado;
@@ -218,6 +223,29 @@ export class ReservationService {
     }
 
     // --- Helpers ---
+
+    // Cupos ocupados de varios horarios en una fecha, en una sola query (GROUP BY)
+    private async contarReservasDelDia(scheduleIds: number[], fecha: string): Promise<Map<number, number>> {
+        if (scheduleIds.length === 0) {
+            return new Map();
+        }
+
+        const conteos = await ClassReservation.findAll({
+            attributes: [
+                'schedule_id',
+                [sequelize.fn('COUNT', sequelize.col('id')), 'total']
+            ],
+            where: {
+                schedule_id: { [Op.in]: scheduleIds },
+                reservation_date: fecha,
+                status: { [Op.in]: ['RESERVED', 'ATTENDED'] }
+            },
+            group: ['schedule_id'],
+            raw: true
+        }) as unknown as { schedule_id: number; total: number }[];
+
+        return new Map(conteos.map(c => [Number(c.schedule_id), Number(c.total)]));
+    }
 
     // Cuenta reservas que ocupan cupo (reservadas o asistidas)
     private async contarReservas(scheduleId: number, fecha: string) {
@@ -260,7 +288,7 @@ export class ReservationService {
             }]
         });
         if (!reserva) {
-            throw new Error("Reserva no encontrada");
+            throw new AppError("Reserva no encontrada", 404);
         }
         return this.mapToDto(reserva);
     }

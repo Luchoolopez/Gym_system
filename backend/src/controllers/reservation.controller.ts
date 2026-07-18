@@ -1,55 +1,53 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { ReservationService } from "../services/reservation.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 export class ReservationController {
     constructor(private readonly reservationService: ReservationService) {}
 
-    getClasesDelDia = async (req: Request, res: Response): Promise<Response> => {
+    getClasesDelDia = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const fecha = req.query.fecha as string | undefined;
             const actividadId = req.query.actividadId ? parseInt(req.query.actividadId as string, 10) : undefined;
             const result = await this.reservationService.getClasesDelDia(fecha, actividadId);
             return res.status(200).json({ success: true, data: result });
-        } catch (error: any) {
-            console.error(error);
-            return res.status(500).json({ success: false, message: 'Error interno del servidor' });
+        } catch (error) {
+            next(error);
         }
     }
 
-    getMisReservas = async (req: Request, res: Response): Promise<Response> => {
+    getMisReservas = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const userId = (req as AuthRequest).user!.id;
             const result = await this.reservationService.getMisReservas(userId);
             return res.status(200).json({ success: true, data: result });
-        } catch (error: any) {
-            console.error(error);
-            return res.status(500).json({ success: false, message: 'Error interno del servidor' });
+        } catch (error) {
+            next(error);
         }
     }
 
-    createReserva = async (req: Request, res: Response): Promise<Response> => {
+    createReserva = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const userId = (req as AuthRequest).user!.id;
             const result = await this.reservationService.createReserva(userId, req.body);
             return res.status(201).json({ success: true, message: 'Reserva realizada exitosamente', data: result });
-        } catch (error: any) {
-            return res.status(400).json({ success: false, message: error.message });
+        } catch (error) {
+            next(error);
         }
     }
 
-    cancelarReserva = async (req: Request, res: Response): Promise<Response> => {
+    cancelarReserva = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const userId = (req as AuthRequest).user!.id;
             const id = parseInt(String(req.params.id), 10);
             const result = await this.reservationService.cancelarReserva(userId, id);
             return res.status(200).json({ success: true, message: 'Reserva cancelada exitosamente', data: result });
-        } catch (error: any) {
-            return res.status(400).json({ success: false, message: error.message });
+        } catch (error) {
+            next(error);
         }
     }
 
-    getInscriptos = async (req: Request, res: Response): Promise<Response> => {
+    getInscriptos = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const scheduleId = parseInt(String(req.params.scheduleId), 10);
             const fecha = req.query.fecha as string;
@@ -58,18 +56,18 @@ export class ReservationController {
             }
             const result = await this.reservationService.getInscriptos(scheduleId, fecha);
             return res.status(200).json({ success: true, data: result });
-        } catch (error: any) {
-            return res.status(404).json({ success: false, message: error.message });
+        } catch (error) {
+            next(error);
         }
     }
 
-    marcarAsistencia = async (req: Request, res: Response): Promise<Response> => {
+    marcarAsistencia = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const id = parseInt(String(req.params.id), 10);
             const result = await this.reservationService.marcarAsistencia(id, req.body);
             return res.status(200).json({ success: true, message: 'Asistencia registrada exitosamente', data: result });
-        } catch (error: any) {
-            return res.status(400).json({ success: false, message: error.message });
+        } catch (error) {
+            next(error);
         }
     }
 }

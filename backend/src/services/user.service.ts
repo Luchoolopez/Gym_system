@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app.error";
 import { Op } from "sequelize";
 import { User, Role } from "../models/index";
 import { CreateUserType, UpdateUserType, UpdateProfileType } from "../validations/user.validation";
@@ -41,7 +42,7 @@ export class UserService {
             include: [{ model: Role, as: 'role' }]
         });
         if (!user) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
         return this.mapToDto(user);
     }
@@ -49,19 +50,19 @@ export class UserService {
     async createUsuario(createData: CreateUserType) {
         const existingUser = await User.findOne({ where: { email: createData.email } });
         if (existingUser) {
-            throw new Error("El email ya esta registrado");
+            throw new AppError("El email ya esta registrado", 409);
         }
 
         if (createData.dni) {
             const existingDni = await User.findOne({ where: { dni: createData.dni } });
             if (existingDni) {
-                throw new Error("El DNI ya esta registrado");
+                throw new AppError("El DNI ya esta registrado", 409);
             }
         }
 
         const role = await Role.findOne({ where: { name: createData.rol || 'User' } });
         if (!role) {
-            throw new Error("Rol no encontrado");
+            throw new AppError("Rol no encontrado", 404);
         }
 
         const newUser = await User.create({
@@ -81,13 +82,13 @@ export class UserService {
     async updateUsuario(userId: number, updateData: UpdateUserType) {
         const userToUpdate = await User.findByPk(userId);
         if (!userToUpdate) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
 
         if (updateData.email !== undefined && updateData.email !== userToUpdate.email) {
             const existingUser = await User.findOne({ where: { email: updateData.email } });
             if (existingUser) {
-                throw new Error("El email ya esta registrado");
+                throw new AppError("El email ya esta registrado", 409);
             }
             userToUpdate.email = updateData.email;
         }
@@ -95,7 +96,7 @@ export class UserService {
         if (updateData.dni !== undefined && updateData.dni !== userToUpdate.dni) {
             const existingDni = await User.findOne({ where: { dni: updateData.dni } });
             if (existingDni) {
-                throw new Error("El DNI ya esta registrado");
+                throw new AppError("El DNI ya esta registrado", 409);
             }
             userToUpdate.dni = updateData.dni;
         }
@@ -103,7 +104,7 @@ export class UserService {
         if (updateData.rol !== undefined) {
             const role = await Role.findOne({ where: { name: updateData.rol } });
             if (!role) {
-                throw new Error("Rol no encontrado");
+                throw new AppError("Rol no encontrado", 404);
             }
             userToUpdate.role_id = role.id;
         }
@@ -136,7 +137,7 @@ export class UserService {
     async deleteUsuario(userId: number) {
         const userToDelete = await User.findByPk(userId);
         if (!userToDelete) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
 
         userToDelete.is_active = false;

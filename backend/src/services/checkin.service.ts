@@ -1,8 +1,9 @@
+import { AppError } from "../utils/app.error";
 import { Op } from "sequelize";
 import { CheckIn, ClassReservation, User } from "../models/index";
 import { CreateCheckInType } from "../validations/checkin.validation";
 import { findSuscripcionVigente, clasesRestantes } from "./subscription.service";
-import { hoyStr } from "../utils/date.handle";
+import { hoyStr, sumarDias } from "../utils/date.handle";
 
 export class CheckInService {
 
@@ -14,7 +15,7 @@ export class CheckInService {
             where: {
                 check_in_time: {
                     [Op.gte]: new Date(`${fechaConsulta}T00:00:00`),
-                    [Op.lt]: new Date(`${fechaConsulta}T23:59:59.999`)
+                    [Op.lt]: new Date(`${sumarDias(fechaConsulta, 1)}T00:00:00`)
                 }
             },
             include: [
@@ -59,38 +60,42 @@ export class CheckInService {
             : await User.findByPk(createData.usuarioId!);
 
         if (!user || !user.is_active) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
 
         // Validar acceso: suscripción vigente y paga
         const suscripcion = await findSuscripcionVigente(user.id);
         if (!suscripcion) {
-            throw new Error("El usuario no tiene una suscripción vigente");
+            throw new AppError("El usuario no tiene una suscripción vigente", 400);
         }
         if (suscripcion.payment_status !== 'PAID') {
-            throw new Error("La suscripción tiene el pago pendiente");
+            throw new AppError("La suscripción tiene el pago pendiente", 400);
         }
 
         const restantes = clasesRestantes(suscripcion);
         if (restantes !== null && restantes <= 0) {
-            throw new Error("El usuario no tiene clases disponibles en su plan");
+            throw new AppError("El usuario no tiene clases disponibles en su plan", 400);
         }
 
-        // Si tiene una reserva para hoy, el check-in la marca como asistida
+        // Si tiene una reserva para hoy, el check-in la marca como asistida.
+        // Si ya estaba ATTENDED (el profesor la marcó antes), la clase ya fue
+        // descontada en marcarAsistencia: no se descuenta de nuevo.
         const reservaHoy = await ClassReservation.findOne({
             where: {
                 user_id: user.id,
                 reservation_date: hoyStr(),
-                status: 'RESERVED'
+                status: { [Op.in]: ['RESERVED', 'ATTENDED'] }
             }
         });
-        if (reservaHoy) {
+
+        const yaDescontada = reservaHoy?.status === 'ATTENDED';
+        if (reservaHoy && reservaHoy.status === 'RESERVED') {
             reservaHoy.status = 'ATTENDED';
             await reservaHoy.save();
         }
 
         // Plan limitado: se descuenta una clase (una sola vez, con o sin reserva)
-        if (suscripcion.plan?.class_limit != null) {
+        if (!yaDescontada && suscripcion.plan?.class_limit != null) {
             suscripcion.classes_used += 1;
             await suscripcion.save();
         }

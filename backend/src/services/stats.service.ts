@@ -89,7 +89,7 @@ export class StatsService {
             where: {
                 check_in_time: {
                     [Op.gte]: new Date(`${hoy}T00:00:00`),
-                    [Op.lt]: new Date(`${hoy}T23:59:59.999`)
+                    [Op.lt]: new Date(`${sumarDias(hoy, 1)}T00:00:00`)
                 }
             }
         });

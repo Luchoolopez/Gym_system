@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app.error";
 import { Op } from "sequelize";
 import { UserSubscription, MembershipPlan, User } from "../models/index";
 import { CreateSubscriptionType, RenewSubscriptionType } from "../validations/subscription.validation";
@@ -75,7 +76,7 @@ export class SubscriptionService {
             order: [['end_date', 'DESC']]
         });
         if (!ultima) {
-            throw new Error("El usuario no tiene suscripciones");
+            throw new AppError("El usuario no tiene suscripciones", 400);
         }
         return this.mapToDto(ultima);
     }
@@ -83,7 +84,7 @@ export class SubscriptionService {
     async getHistorialUsuario(userId: number) {
         const user = await User.findByPk(userId);
         if (!user) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
 
         const suscripciones = await UserSubscription.findAll({
@@ -98,17 +99,17 @@ export class SubscriptionService {
     async createSuscripcion(createData: CreateSubscriptionType) {
         const user = await User.findByPk(createData.usuarioId);
         if (!user || !user.is_active) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
 
         const plan = await MembershipPlan.findByPk(createData.planId);
         if (!plan || !plan.is_active) {
-            throw new Error("Plan no encontrado");
+            throw new AppError("Plan no encontrado", 404);
         }
 
         const vigente = await findSuscripcionVigente(createData.usuarioId);
         if (vigente) {
-            throw new Error("El usuario ya tiene una suscripción vigente");
+            throw new AppError("El usuario ya tiene una suscripción vigente", 409);
         }
 
         const fechaInicio = createData.fechaInicio ?? hoyStr();
@@ -129,13 +130,13 @@ export class SubscriptionService {
             include: [{ model: MembershipPlan, as: 'plan' }]
         });
         if (!anterior) {
-            throw new Error("Suscripción no encontrada");
+            throw new AppError("Suscripción no encontrada", 404);
         }
 
         const planId = renewData.planId ?? anterior.plan_id;
         const plan = await MembershipPlan.findByPk(planId);
         if (!plan || !plan.is_active) {
-            throw new Error("Plan no encontrado");
+            throw new AppError("Plan no encontrado", 404);
         }
 
         const hoy = hoyStr();
@@ -157,7 +158,7 @@ export class SubscriptionService {
     async cancelarSuscripcion(subscriptionId: number) {
         const suscripcion = await UserSubscription.findByPk(subscriptionId);
         if (!suscripcion) {
-            throw new Error("Suscripción no encontrada");
+            throw new AppError("Suscripción no encontrada", 404);
         }
 
         suscripcion.payment_status = 'CANCELLED';
@@ -174,7 +175,7 @@ export class SubscriptionService {
             ]
         });
         if (!suscripcion) {
-            throw new Error("Suscripción no encontrada");
+            throw new AppError("Suscripción no encontrada", 404);
         }
         return this.mapToDto(suscripcion);
     }

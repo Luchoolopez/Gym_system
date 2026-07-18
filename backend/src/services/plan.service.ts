@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app.error";
 import { MembershipPlan } from "../models/index";
 import { CreatePlanType, UpdatePlanType } from "../validations/plan.validation";
 
@@ -12,7 +13,7 @@ export class PlanService {
     async getPlanById(planId: number) {
         const plan = await MembershipPlan.findByPk(planId);
         if (!plan) {
-            throw new Error("Plan no encontrado");
+            throw new AppError("Plan no encontrado", 404);
         }
         return this.mapToDto(plan);
     }
@@ -33,7 +34,7 @@ export class PlanService {
     async updatePlan(planId: number, updateData: UpdatePlanType) {
         const planToUpdate = await MembershipPlan.findByPk(planId);
         if (!planToUpdate) {
-            throw new Error("Plan no encontrado");
+            throw new AppError("Plan no encontrado", 404);
         }
 
         if (updateData.nombre !== undefined) {
@@ -63,7 +64,7 @@ export class PlanService {
     async deletePlan(planId: number) {
         const planToDelete = await MembershipPlan.findByPk(planId);
         if (!planToDelete) {
-            throw new Error("Plan no encontrado");
+            throw new AppError("Plan no encontrado", 404);
         }
 
         planToDelete.is_active = false;

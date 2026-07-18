@@ -1,3 +1,4 @@
+import { AppError } from "../utils/app.error";
 import { Routine, User } from "../models/index";
 import { CreateRoutineType, UpdateRoutineType } from "../validations/routine.validation";
 
@@ -26,7 +27,7 @@ export class RoutineService {
     async createRutina(professorId: number, createData: CreateRoutineType) {
         const user = await User.findByPk(createData.usuarioId);
         if (!user || !user.is_active) {
-            throw new Error("Usuario no encontrado");
+            throw new AppError("Usuario no encontrado", 404);
         }
 
         const nueva = await Routine.create({
@@ -42,7 +43,7 @@ export class RoutineService {
     async updateRutina(professorId: number, routineId: number, updateData: UpdateRoutineType) {
         const rutina = await Routine.findByPk(routineId);
         if (!rutina || rutina.professor_id !== professorId) {
-            throw new Error("Rutina no encontrada");
+            throw new AppError("Rutina no encontrada", 404);
         }
 
         if (updateData.titulo !== undefined) {
@@ -60,7 +61,7 @@ export class RoutineService {
     async deleteRutina(professorId: number, routineId: number) {
         const rutina = await Routine.findByPk(routineId);
         if (!rutina || rutina.professor_id !== professorId) {
-            throw new Error("Rutina no encontrada");
+            throw new AppError("Rutina no encontrada", 404);
         }
 
         await rutina.destroy();
@@ -76,7 +77,7 @@ export class RoutineService {
             ]
         });
         if (!rutina) {
-            throw new Error("Rutina no encontrada");
+            throw new AppError("Rutina no encontrada", 404);
         }
         return this.mapToDto(rutina);
     }
