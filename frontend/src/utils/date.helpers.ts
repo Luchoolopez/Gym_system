@@ -35,3 +35,21 @@ export const formatHora = (hora?: string): string => (hora ? hora.slice(0, 5) : 
 
 export const formatPrecio = (precio: number): string =>
   precio.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+
+// Lunes de la semana que contiene 'fecha' (YYYY-MM-DD)
+export const inicioSemana = (fecha: string): string => {
+  const [y, m, d] = fecha.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const offset = (date.getDay() + 6) % 7; // 0 = lunes
+  return sumarDias(fecha, -offset);
+};
+
+// Las 7 fechas (Lun→Dom) de la semana que arranca en 'lunes'
+export const fechasSemana = (lunes: string): string[] =>
+  Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
+
+// "2026-07-20" -> "20/07"
+export const formatDiaMes = (fecha: string): string => {
+  const [, m, d] = fecha.split('-');
+  return `${d}/${m}`;
+};

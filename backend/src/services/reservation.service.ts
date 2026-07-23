@@ -2,7 +2,7 @@ import { AppError } from "../utils/app.error";
 import { Op } from "sequelize";
 import { sequelize } from "../config/database";
 import { ClassReservation, Schedule, Activity, User } from "../models/index";
-import { CreateReservationType, AttendanceType } from "../validations/reservation.validation";
+import { CreateReservationType, AdminCreateReservationType, AttendanceType } from "../validations/reservation.validation";
 import { findSuscripcionVigente, clasesRestantes } from "./subscription.service";
 import { hoyStr, diaDeLaSemana, combinarFechaHora } from "../utils/date.handle";
 import config from "../config/config";
@@ -122,6 +122,82 @@ export class ReservationService {
         });
 
         return this.getReservaById(nueva.id);
+    }
+
+    // Alta presencial por Admin/Profesor: anota a un socio en la clase.
+    // A diferencia de createReserva, no valida la ventana de reserva ni la suscripción
+    // (el staff tiene contexto del socio que está físicamente en el club), pero sí respeta el cupo.
+    async adminCreateReserva(createData: AdminCreateReservationType) {
+        const usuario = await User.findByPk(createData.usuarioId);
+        if (!usuario || !usuario.is_active) {
+            throw new AppError("Usuario no encontrado", 404);
+        }
+
+        const horario = await Schedule.findByPk(createData.horarioId);
+        if (!horario || !horario.is_active) {
+            throw new AppError("Horario no encontrado", 404);
+        }
+
+        if (diaDeLaSemana(createData.fecha) !== horario.day_of_week) {
+            throw new AppError(`La fecha no corresponde al día de la clase (${horario.day_of_week})`, 400);
+        }
+
+        const existente = await ClassReservation.findOne({
+            where: {
+                user_id: createData.usuarioId,
+                schedule_id: horario.id,
+                reservation_date: createData.fecha
+            }
+        });
+
+        if (existente && existente.status !== 'CANCELLED') {
+            throw new AppError("El socio ya está anotado en esta clase", 409);
+        }
+
+        // Respetar el cupo (no sobrevender)
+        const reservados = await this.contarReservas(horario.id, createData.fecha);
+        if (horario.capacity != null && reservados >= horario.capacity) {
+            throw new AppError("La clase está completa", 400);
+        }
+
+        if (existente) {
+            existente.status = 'RESERVED';
+            await existente.save();
+            return this.getReservaById(existente.id);
+        }
+
+        const nueva = await ClassReservation.create({
+            user_id: createData.usuarioId,
+            schedule_id: horario.id,
+            reservation_date: createData.fecha
+        });
+
+        return this.getReservaById(nueva.id);
+    }
+
+    // Baja por Admin/Profesor: quita a un socio de la clase sin importar el dueño ni la ventana.
+    async adminCancelReserva(reservaId: number) {
+        const reserva = await ClassReservation.findByPk(reservaId);
+        if (!reserva) {
+            throw new AppError("Reserva no encontrada", 404);
+        }
+        if (reserva.status === 'CANCELLED') {
+            throw new AppError("La reserva ya está cancelada", 400);
+        }
+
+        // Si ya había asistido con un plan limitado, se le devuelve la clase consumida
+        if (reserva.status === 'ATTENDED') {
+            const suscripcion = await findSuscripcionVigente(reserva.user_id);
+            if (suscripcion && suscripcion.plan?.class_limit != null && suscripcion.classes_used > 0) {
+                suscripcion.classes_used -= 1;
+                await suscripcion.save();
+            }
+        }
+
+        reserva.status = 'CANCELLED';
+        await reserva.save();
+
+        return this.getReservaById(reserva.id);
     }
 
     async cancelarReserva(userId: number, reservaId: number) {

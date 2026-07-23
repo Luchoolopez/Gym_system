@@ -17,7 +17,7 @@ export const Input: React.FC<InputProps> = ({ label, error, className = '', id, 
       )}
       <input
         id={inputId}
-        className={`w-full bg-graphite border px-4 py-3 text-sm text-on-surface placeholder:text-muted/50 outline-none transition-colors duration-300 focus:border-volt ${error ? 'border-error' : 'border-outline'} ${className}`}
+        className={`w-full bg-graphite border px-4 py-3 text-sm text-on-surface placeholder:text-muted/50 outline-none transition-colors duration-300 focus:border-volt disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-graphite/40 ${error ? 'border-error' : 'border-outline'} ${className}`}
         {...props}
       />
       {error && <span className="text-xs text-error">{error}</span>}

@@ -36,6 +36,12 @@ export interface CreateReservaDto {
   fecha: string;
 }
 
+export interface AdminCreateReservaDto {
+  usuarioId: number;
+  horarioId: number;
+  fecha: string;
+}
+
 export interface InscriptosDto {
   horarioId: number;
   actividad?: string;

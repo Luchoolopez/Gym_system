@@ -2,7 +2,7 @@ import { Router } from "express";
 import { ReservationController } from "../controllers/reservation.controller";
 import { ReservationService } from "../services/reservation.service";
 import { validateSchema } from "../middlewares/validateSchema.middleware";
-import { createReservationSchema, attendanceSchema } from "../validations/reservation.validation";
+import { createReservationSchema, adminCreateReservationSchema, attendanceSchema } from "../validations/reservation.validation";
 import { authenticateToken } from "../middlewares/auth.middleware";
 import { isProfessor } from "../middlewares/isProfessor.middleware";
 
@@ -16,6 +16,10 @@ reservationRouter.get('/clase/:scheduleId', authenticateToken, isProfessor, rese
 reservationRouter.post('/', authenticateToken, validateSchema(createReservationSchema), reservationController.createReserva);
 reservationRouter.patch('/:id/cancelar', authenticateToken, reservationController.cancelarReserva);
 reservationRouter.patch('/:id/asistencia', authenticateToken, isProfessor, validateSchema(attendanceSchema), reservationController.marcarAsistencia);
+
+// Gestión presencial por Admin/Profesor: anotar y quitar socios de una clase
+reservationRouter.post('/admin', authenticateToken, isProfessor, validateSchema(adminCreateReservationSchema), reservationController.adminCreateReserva);
+reservationRouter.patch('/:id/quitar', authenticateToken, isProfessor, reservationController.adminCancelReserva);
 
 export default reservationRouter;
 export { reservationRouter as router };

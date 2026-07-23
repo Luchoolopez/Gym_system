@@ -47,6 +47,25 @@ export class ReservationController {
         }
     }
 
+    adminCreateReserva = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const result = await this.reservationService.adminCreateReserva(req.body);
+            return res.status(201).json({ success: true, message: 'Socio anotado en la clase', data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    adminCancelReserva = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const id = parseInt(String(req.params.id), 10);
+            const result = await this.reservationService.adminCancelReserva(id);
+            return res.status(200).json({ success: true, message: 'Socio quitado de la clase', data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     getInscriptos = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
         try {
             const scheduleId = parseInt(String(req.params.scheduleId), 10);

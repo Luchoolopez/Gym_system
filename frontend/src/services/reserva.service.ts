@@ -1,6 +1,6 @@
 import api from './api';
 import type { ApiResponse } from '../types/common.types';
-import type { ClaseDelDiaDto, ReservaDto, CreateReservaDto, InscriptosDto, EstadoReserva } from '../types/reserva.types';
+import type { ClaseDelDiaDto, ReservaDto, CreateReservaDto, AdminCreateReservaDto, InscriptosDto, EstadoReserva } from '../types/reserva.types';
 
 export const reservaService = {
   getClasesDelDia: async (fecha?: string, actividadId?: number): Promise<ClaseDelDiaDto[]> => {
@@ -22,6 +22,18 @@ export const reservaService = {
 
   cancelar: async (id: number): Promise<ReservaDto> => {
     const response = await api.patch<ApiResponse<ReservaDto>>(`/reservas/${id}/cancelar`);
+    return response.data.data;
+  },
+
+  // Admin/Profesor: anotar un socio en una clase (asistencia presencial)
+  adminCreate: async (data: AdminCreateReservaDto): Promise<ReservaDto> => {
+    const response = await api.post<ApiResponse<ReservaDto>>('/reservas/admin', data);
+    return response.data.data;
+  },
+
+  // Admin/Profesor: quitar un socio de una clase
+  adminQuitar: async (reservaId: number): Promise<ReservaDto> => {
+    const response = await api.patch<ApiResponse<ReservaDto>>(`/reservas/${reservaId}/quitar`);
     return response.data.data;
   },
 

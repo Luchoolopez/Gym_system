@@ -28,6 +28,11 @@
   --font-hanken: 'Plus Jakarta Sans', sans-serif;
 }
 
+/* Controles nativos (date picker, dropdowns de select, scrollbars) en modo oscuro */
+:root {
+  color-scheme: dark;
+}
+
 body {
   @apply bg-surface text-on-surface font-hanken antialiased selection:bg-volt selection:text-carbon;
 }
@@ -36,8 +41,18 @@ a, button, [role="button"] {
   cursor: pointer;
 }
 
+/* Los form controls no heredan el color del body por defecto: se lo forzamos
+   para que el texto tipeado no salga negro sobre el fondo oscuro. */
 input, textarea, select {
+  color: var(--color-on-surface);
+}
+
+input, textarea {
   cursor: text;
+}
+
+select {
+  cursor: pointer;
 }
 
 .text-stroke-volt {
