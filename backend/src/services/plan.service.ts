@@ -1,4 +1,5 @@
 import { AppError } from "../utils/app.error";
+import { Op } from "sequelize";
 import { MembershipPlan } from "../models/index";
 import { CreatePlanType, UpdatePlanType } from "../validations/plan.validation";
 
@@ -6,7 +7,8 @@ export class PlanService {
 
     async getPlanes(incluirInactivos: boolean = false) {
         const where = incluirInactivos ? {} : { is_active: true };
-        const planes = await MembershipPlan.findAll({ where, order: [['price', 'ASC']] });
+        // El destacado primero, luego por precio
+        const planes = await MembershipPlan.findAll({ where, order: [['featured', 'DESC'], ['price', 'ASC']] });
         return planes.map(p => this.mapToDto(p));
     }
 
@@ -19,14 +21,22 @@ export class PlanService {
     }
 
     async createPlan(createData: CreatePlanType) {
+        const destacado = createData.destacado ?? false;
+
         const newPlan = await MembershipPlan.create({
             name: createData.nombre,
             description: createData.descripcion,
             price: createData.precio,
             duration_days: createData.duracionDias,
             class_limit: createData.limiteClases ?? null,
+            featured: destacado,
             is_active: createData.activo ?? true
         });
+
+        // Solo puede haber un plan destacado a la vez
+        if (destacado) {
+            await this.desmarcarOtrosDestacados(newPlan.id);
+        }
 
         return this.mapToDto(newPlan);
     }
@@ -52,11 +62,19 @@ export class PlanService {
         if (updateData.limiteClases !== undefined) {
             planToUpdate.class_limit = updateData.limiteClases;
         }
+        if (updateData.destacado !== undefined) {
+            planToUpdate.featured = updateData.destacado;
+        }
         if (updateData.activo !== undefined) {
             planToUpdate.is_active = updateData.activo;
         }
 
         await planToUpdate.save();
+
+        // Si quedó marcado como destacado, se desmarca cualquier otro
+        if (planToUpdate.featured) {
+            await this.desmarcarOtrosDestacados(planToUpdate.id);
+        }
 
         return this.mapToDto(planToUpdate);
     }
@@ -68,9 +86,17 @@ export class PlanService {
         }
 
         planToDelete.is_active = false;
+        planToDelete.featured = false; // un plan dado de baja no puede quedar destacado
         await planToDelete.save();
 
         return true;
+    }
+
+    private async desmarcarOtrosDestacados(exceptoId: number) {
+        await MembershipPlan.update(
+            { featured: false },
+            { where: { featured: true, id: { [Op.ne]: exceptoId } } }
+        );
     }
 
     private mapToDto(p: MembershipPlan) {
@@ -82,6 +108,7 @@ export class PlanService {
             duracionDias: p.duration_days,
             limiteClases: p.class_limit, // null = pase libre
             paseLibre: p.class_limit == null,
+            destacado: p.featured,
             activo: p.is_active,
             fechaCreacion: p.created_at
         };

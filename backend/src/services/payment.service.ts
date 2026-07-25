@@ -1,7 +1,7 @@
 import { AppError } from "../utils/app.error";
 import { Op } from "sequelize";
 import { Payment, UserSubscription, MembershipPlan, User } from "../models/index";
-import { CreatePaymentType } from "../validations/payment.validation";
+import { CreatePaymentType, UpdatePaymentType } from "../validations/payment.validation";
 import { hoyStr } from "../utils/date.handle";
 
 export class PaymentService {
@@ -92,6 +92,41 @@ export class PaymentService {
         });
 
         return this.mapToDto(pago!);
+    }
+
+    async updatePago(pagoId: number, updateData: UpdatePaymentType) {
+        const pago = await Payment.findByPk(pagoId);
+        if (!pago) {
+            throw new AppError("Pago no encontrado", 404);
+        }
+
+        if (updateData.monto !== undefined) {
+            pago.amount = updateData.monto;
+        }
+        if (updateData.metodo !== undefined) {
+            pago.payment_method = updateData.metodo;
+        }
+        if (updateData.fecha !== undefined) {
+            pago.payment_date = updateData.fecha;
+        }
+        if (updateData.notas !== undefined) {
+            pago.notes = updateData.notas;
+        }
+
+        await pago.save();
+
+        const actualizado = await Payment.findByPk(pago.id, {
+            include: [{
+                model: UserSubscription,
+                as: 'suscripcion',
+                include: [
+                    { model: User, as: 'usuario' },
+                    { model: MembershipPlan, as: 'plan' }
+                ]
+            }]
+        });
+
+        return this.mapToDto(actualizado!);
     }
 
     private mapToDto(p: Payment) {

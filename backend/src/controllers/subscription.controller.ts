@@ -66,4 +66,14 @@ export class SubscriptionController {
             next(error);
         }
     }
+
+    updateSuscripcion = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const id = parseInt(String(req.params.id), 10);
+            const result = await this.subscriptionService.updateSuscripcion(id, req.body);
+            return res.status(200).json({ success: true, message: 'Suscripción actualizada exitosamente', data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

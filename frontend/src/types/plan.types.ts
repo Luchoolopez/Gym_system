@@ -6,6 +6,7 @@ export interface PlanDto {
   duracionDias: number;
   limiteClases: number | null;
   paseLibre: boolean;
+  destacado: boolean;
   activo: boolean;
   fechaCreacion?: string;
 }
@@ -16,6 +17,7 @@ export interface CreatePlanDto {
   precio: number;
   duracionDias: number;
   limiteClases?: number | null;
+  destacado?: boolean;
   activo?: boolean;
 }
 

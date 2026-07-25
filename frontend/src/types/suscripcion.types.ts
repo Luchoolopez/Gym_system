@@ -1,4 +1,15 @@
+import type { MetodoPago } from './pago.types';
+
 export type EstadoPago = 'PENDING' | 'PAID' | 'CANCELLED';
+
+export interface PagoResumenDto {
+  id: number;
+  monto: number;
+  metodo: MetodoPago;
+  metodoLabel: string;
+  fecha: string;
+  notas?: string;
+}
 
 export interface SuscripcionDto {
   id: number;
@@ -12,6 +23,7 @@ export interface SuscripcionDto {
   clasesRestantes: number | null;
   vigente: boolean;
   fechaCreacion?: string;
+  pagos?: PagoResumenDto[]; // presente en el historial por socio
 }
 
 export interface CreateSuscripcionDto {
@@ -21,6 +33,11 @@ export interface CreateSuscripcionDto {
 }
 
 export interface RenovarSuscripcionDto {
+  planId?: number;
+  fechaInicio?: string;
+}
+
+export interface UpdateSuscripcionDto {
   planId?: number;
   fechaInicio?: string;
 }

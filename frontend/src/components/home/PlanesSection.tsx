@@ -7,9 +7,6 @@ import { formatPrecio } from '../../utils/date.helpers';
 export const PlanesSection = () => {
   const { planes, loading } = usePlanes();
 
-  // Destacamos el plan del medio (o el segundo si hay varios)
-  const destacadoIdx = planes.length >= 3 ? 1 : planes.length - 1;
-
   return (
     <section className="border-t border-outline bg-graphite">
       <div className="mx-auto max-w-7xl px-4 md:px-8 py-20 md:py-28">
@@ -23,8 +20,8 @@ export const PlanesSection = () => {
             ? Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="h-80 bg-surface-card border border-outline animate-pulse" />
               ))
-            : planes.map((plan, idx) => {
-                const destacado = idx === destacadoIdx;
+            : planes.map((plan) => {
+                const destacado = plan.destacado;
                 return (
                   <div
                     key={plan.id}

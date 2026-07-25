@@ -9,6 +9,7 @@ import { Schedule } from "./Schedule.model";
 import { ClassReservation } from "./ClassReservation.model";
 import { CheckIn } from "./CheckIn.model";
 import { Routine } from "./Routine.model";
+import { DayClosure } from "./DayClosure.model";
 
 export const setupAssociations = () => {
     // Role - User
@@ -64,6 +65,9 @@ export const setupAssociations = () => {
     // User (profesor) - Routine
     User.hasMany(Routine, { foreignKey: "professor_id", as: "rutinasCreadas" });
     Routine.belongsTo(User, { foreignKey: "professor_id", as: "profesor" });
+
+    // User (admin) - DayClosure
+    DayClosure.belongsTo(User, { foreignKey: "closed_by", as: "cerradoPor" });
 };
 
 export {
@@ -77,5 +81,6 @@ export {
     Schedule,
     ClassReservation,
     CheckIn,
-    Routine
+    Routine,
+    DayClosure
 };

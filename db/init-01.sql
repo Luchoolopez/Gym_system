@@ -52,6 +52,7 @@ CREATE TABLE membership_plans (
     price DECIMAL(10, 2) NOT NULL,
     duration_days INT NOT NULL, -- ej: 30 para un pase mensual
     class_limit INT DEFAULT NULL, -- NULL = pase libre; número = clases incluidas en el período
+    featured BOOLEAN DEFAULT FALSE, -- El plan destacado en la landing (uno solo a la vez)
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -136,6 +137,18 @@ CREATE TABLE routines (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (professor_id) REFERENCES users(id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 12. Cierres de caja (un snapshot por día: accesos e ingresos hasta el cierre)
+CREATE TABLE day_closures (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    closure_date DATE NOT NULL UNIQUE, -- un solo cierre por día
+    closed_by INT, -- Admin que cerró la caja
+    total_checkins INT NOT NULL DEFAULT 0,
+    total_income DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    notes VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (closed_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Inserción de roles básicos

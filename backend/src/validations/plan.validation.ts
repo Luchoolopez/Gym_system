@@ -6,6 +6,7 @@ export const createPlanSchema = z.object({
     precio: z.number().positive("El precio debe ser mayor a 0"),
     duracionDias: z.number().int().positive("La duración debe ser mayor a 0"),
     limiteClases: z.number().int().positive("El límite de clases debe ser mayor a 0").nullable().optional(),
+    destacado: z.boolean().optional(),
     activo: z.boolean().optional()
 });
 

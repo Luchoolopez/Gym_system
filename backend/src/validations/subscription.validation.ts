@@ -13,5 +13,11 @@ export const renewSubscriptionSchema = z.object({
     fechaInicio: z.string().regex(fechaRegex, "Formato de fecha inválido (YYYY-MM-DD)").optional()
 });
 
+export const updateSubscriptionSchema = z.object({
+    planId: z.number().int().positive("Plan inválido").optional(),
+    fechaInicio: z.string().regex(fechaRegex, "Formato de fecha inválido (YYYY-MM-DD)").optional()
+});
+
 export type CreateSubscriptionType = z.infer<typeof createSubscriptionSchema>;
 export type RenewSubscriptionType = z.infer<typeof renewSubscriptionSchema>;
+export type UpdateSubscriptionType = z.infer<typeof updateSubscriptionSchema>;

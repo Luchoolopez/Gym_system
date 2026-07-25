@@ -8,11 +8,12 @@ interface MembershipPlanAttributes {
     price: number;
     duration_days: number;
     class_limit?: number | null;
+    featured?: boolean;
     is_active?: boolean;
     created_at?: Date;
 }
 
-interface MembershipPlanCreationAttributes extends Optional<MembershipPlanAttributes, "id" | "description" | "class_limit" | "is_active" | "created_at"> {}
+interface MembershipPlanCreationAttributes extends Optional<MembershipPlanAttributes, "id" | "description" | "class_limit" | "featured" | "is_active" | "created_at"> {}
 
 export class MembershipPlan extends Model<MembershipPlanAttributes, MembershipPlanCreationAttributes> implements MembershipPlanAttributes {
     public declare id: number;
@@ -21,6 +22,7 @@ export class MembershipPlan extends Model<MembershipPlanAttributes, MembershipPl
     public declare price: number;
     public declare duration_days: number;
     public declare class_limit?: number | null;
+    public declare featured: boolean;
     public declare is_active: boolean;
     public declare readonly created_at: Date;
 }
@@ -50,6 +52,10 @@ MembershipPlan.init({
     class_limit: {
         type: DataTypes.INTEGER,
         allowNull: true, // NULL = pase libre
+    },
+    featured: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false, // El plan "destacado" en la landing (uno solo a la vez)
     },
     is_active: {
         type: DataTypes.BOOLEAN,

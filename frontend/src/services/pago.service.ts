@@ -1,6 +1,6 @@
 import api from './api';
 import type { ApiResponse, PagedResponse } from '../types/common.types';
-import type { PagoDto, CreatePagoDto, PagoFilterDto } from '../types/pago.types';
+import type { PagoDto, CreatePagoDto, UpdatePagoDto, PagoFilterDto } from '../types/pago.types';
 
 export const pagoService = {
   getAll: async (params?: PagoFilterDto): Promise<PagedResponse<PagoDto>> => {
@@ -15,6 +15,11 @@ export const pagoService = {
 
   create: async (data: CreatePagoDto): Promise<PagoDto> => {
     const response = await api.post<ApiResponse<PagoDto>>('/pagos', data);
+    return response.data.data;
+  },
+
+  update: async (id: number, data: UpdatePagoDto): Promise<PagoDto> => {
+    const response = await api.patch<ApiResponse<PagoDto>>(`/pagos/${id}`, data);
     return response.data.data;
   },
 };

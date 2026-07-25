@@ -38,4 +38,14 @@ export class PaymentController {
             next(error);
         }
     }
+
+    updatePago = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+        try {
+            const id = parseInt(String(req.params.id), 10);
+            const result = await this.paymentService.updatePago(id, req.body);
+            return res.status(200).json({ success: true, message: 'Pago actualizado exitosamente', data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

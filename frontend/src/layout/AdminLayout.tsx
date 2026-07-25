@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, CalendarClock, ScanLine, Dumbbell, ArrowLeft, Tags } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, CalendarClock, ScanLine, Dumbbell, ArrowLeft, Tags, Activity } from 'lucide-react';
 
 const itemClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 px-4 py-3 text-[12px] font-bold uppercase tracking-[0.14em] border-l-2 transition-colors duration-300 ${
@@ -29,6 +29,9 @@ export const AdminLayout = () => (
         <NavLink to="/admin/planes" className={itemClass}>
           <Tags size={16} /> Planes
         </NavLink>
+        <NavLink to="/admin/actividades" className={itemClass}>
+          <Activity size={16} /> Actividades
+        </NavLink>
         <NavLink to="/admin/horarios" className={itemClass}>
           <CalendarClock size={16} /> Horarios
         </NavLink>
@@ -47,6 +50,7 @@ export const AdminLayout = () => (
           { to: '/admin/usuarios', label: 'Usuarios' },
           { to: '/admin/suscripciones', label: 'Suscripciones' },
           { to: '/admin/planes', label: 'Planes' },
+          { to: '/admin/actividades', label: 'Actividades' },
           { to: '/admin/horarios', label: 'Horarios' },
         ].map((item) => (
           <NavLink

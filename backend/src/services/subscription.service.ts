@@ -1,8 +1,12 @@
 import { AppError } from "../utils/app.error";
 import { Op } from "sequelize";
-import { UserSubscription, MembershipPlan, User } from "../models/index";
-import { CreateSubscriptionType, RenewSubscriptionType } from "../validations/subscription.validation";
+import { UserSubscription, MembershipPlan, User, Payment } from "../models/index";
+import { CreateSubscriptionType, RenewSubscriptionType, UpdateSubscriptionType } from "../validations/subscription.validation";
 import { hoyStr, sumarDias } from "../utils/date.handle";
+
+const METODO_LABEL: Record<string, string> = {
+    CASH: 'Efectivo', TRANSFER: 'Transferencia', CARD: 'Tarjeta', MERCADOPAGO: 'MercadoPago'
+};
 
 // Busca la suscripción vigente de un usuario (no cancelada y dentro del período).
 // La reusan los módulos de reservas y check-ins para validar el acceso.
@@ -89,11 +93,51 @@ export class SubscriptionService {
 
         const suscripciones = await UserSubscription.findAll({
             where: { user_id: userId },
-            include: [{ model: MembershipPlan, as: 'plan' }],
+            include: [
+                { model: MembershipPlan, as: 'plan' },
+                { model: Payment, as: 'pagos' }
+            ],
             order: [['end_date', 'DESC']]
         });
 
-        return suscripciones.map(s => this.mapToDto(s));
+        // El historial incluye los pagos de cada suscripción
+        return suscripciones.map(s => ({
+            ...this.mapToDto(s),
+            pagos: (s.pagos ?? [])
+                .slice()
+                .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))
+                .map(p => ({
+                    id: p.id,
+                    monto: Number(p.amount),
+                    metodo: p.payment_method,
+                    metodoLabel: METODO_LABEL[p.payment_method] ?? p.payment_method,
+                    fecha: p.payment_date,
+                    notas: p.notes
+                }))
+        }));
+    }
+
+    async updateSuscripcion(subscriptionId: number, updateData: UpdateSubscriptionType) {
+        const suscripcion = await UserSubscription.findByPk(subscriptionId);
+        if (!suscripcion) {
+            throw new AppError("Suscripción no encontrada", 404);
+        }
+
+        // Plan a usar para recalcular la duración (el nuevo o el actual)
+        const planId = updateData.planId ?? suscripcion.plan_id;
+        const plan = await MembershipPlan.findByPk(planId);
+        if (!plan) {
+            throw new AppError("Plan no encontrado", 404);
+        }
+
+        suscripcion.plan_id = planId;
+        const fechaInicio = updateData.fechaInicio ?? suscripcion.start_date;
+        suscripcion.start_date = fechaInicio;
+        suscripcion.end_date = sumarDias(fechaInicio, plan.duration_days);
+
+        await suscripcion.save();
+
+        return this.getSuscripcionById(suscripcion.id);
     }
 
     async createSuscripcion(createData: CreateSubscriptionType) {

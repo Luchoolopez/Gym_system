@@ -1,6 +1,6 @@
 import api from './api';
 import type { ApiResponse, PagedResponse } from '../types/common.types';
-import type { SuscripcionDto, CreateSuscripcionDto, RenovarSuscripcionDto, SuscripcionFilterDto } from '../types/suscripcion.types';
+import type { SuscripcionDto, CreateSuscripcionDto, RenovarSuscripcionDto, UpdateSuscripcionDto, SuscripcionFilterDto } from '../types/suscripcion.types';
 
 export const suscripcionService = {
   getAll: async (params?: SuscripcionFilterDto): Promise<PagedResponse<SuscripcionDto>> => {
@@ -25,6 +25,11 @@ export const suscripcionService = {
 
   renovar: async (id: number, data?: RenovarSuscripcionDto): Promise<SuscripcionDto> => {
     const response = await api.post<ApiResponse<SuscripcionDto>>(`/suscripciones/${id}/renovar`, data ?? {});
+    return response.data.data;
+  },
+
+  update: async (id: number, data: UpdateSuscripcionDto): Promise<SuscripcionDto> => {
+    const response = await api.patch<ApiResponse<SuscripcionDto>>(`/suscripciones/${id}`, data);
     return response.data.data;
   },
 

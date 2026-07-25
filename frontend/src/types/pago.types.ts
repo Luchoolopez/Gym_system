@@ -27,6 +27,13 @@ export interface CreatePagoDto {
   notas?: string;
 }
 
+export interface UpdatePagoDto {
+  monto?: number;
+  metodo?: MetodoPago;
+  fecha?: string;
+  notas?: string;
+}
+
 export interface PagoFilterDto {
   page?: number;
   limit?: number;

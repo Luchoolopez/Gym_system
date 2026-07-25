@@ -2,6 +2,7 @@
 import { sequelize } from "../config/database";
 import { MembershipPlan } from "./MembershipPlan.model";
 import { User } from "./User.model";
+import type { Payment } from "./Payment.model";
 
 interface UserSubscriptionAttributes {
     id: number;
@@ -29,6 +30,7 @@ export class UserSubscription extends Model<UserSubscriptionAttributes, UserSubs
     // Disponibles cuando se incluyen las asociaciones
     public declare readonly plan?: MembershipPlan;
     public declare readonly usuario?: User;
+    public declare readonly pagos?: Payment[];
 }
 
 UserSubscription.init({

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Infinity as InfinityIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Infinity as InfinityIcon, Star } from 'lucide-react';
 import { PageTitle, Muted, Button, Chip, Input, Modal } from '../../components/ui';
 import { DataTable, type Column } from '../../components/admin/DataTable';
 import { useAdminPlanes } from '../../hooks/admin/useAdminPlanes';
@@ -10,7 +10,7 @@ import { extractErrorMessage } from '../../utils/api.helpers';
 import { formatPrecio } from '../../utils/date.helpers';
 import type { PlanDto } from '../../types/plan.types';
 
-const emptyForm = { nombre: '', descripcion: '', precio: '', duracionDias: '', limiteClases: '', paseLibre: true };
+const emptyForm = { nombre: '', descripcion: '', precio: '', duracionDias: '', limiteClases: '', paseLibre: true, destacado: false };
 
 export const AdminPlanes = () => {
   const { planes, loading, refetch } = useAdminPlanes();
@@ -35,6 +35,7 @@ export const AdminPlanes = () => {
       duracionDias: String(plan.duracionDias),
       limiteClases: plan.limiteClases != null ? String(plan.limiteClases) : '',
       paseLibre: plan.paseLibre,
+      destacado: plan.destacado,
     });
     open();
   };
@@ -48,6 +49,7 @@ export const AdminPlanes = () => {
         precio: Number(form.precio),
         duracionDias: Number(form.duracionDias),
         limiteClases: form.paseLibre ? null : Number(form.limiteClases),
+        destacado: form.destacado,
       };
       if (editando) {
         await planService.update(editando.id, payload);
@@ -87,6 +89,17 @@ export const AdminPlanes = () => {
           <span className="flex items-center gap-1 text-volt"><InfinityIcon size={14} /> Libre</span>
         ) : (
           p.limiteClases
+        ),
+    },
+    {
+      header: 'Destacado',
+      render: (p) =>
+        p.destacado ? (
+          <span className="flex items-center gap-1 text-volt" title="Plan destacado en la landing">
+            <Star size={14} fill="currentColor" /> Sí
+          </span>
+        ) : (
+          <span className="text-muted">—</span>
         ),
     },
     { header: 'Estado', render: (p) => <Chip variant={p.activo ? 'success' : 'neutral'}>{p.activo ? 'Activo' : 'Baja'}</Chip> },
@@ -147,6 +160,15 @@ export const AdminPlanes = () => {
               onChange={(e) => setForm({ ...form, limiteClases: e.target.value })}
             />
           )}
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.destacado}
+              onChange={(e) => setForm({ ...form, destacado: e.target.checked })}
+              className="accent-volt w-4 h-4"
+            />
+            Destacar en la landing (reemplaza al destacado actual)
+          </label>
           <div className="flex justify-end gap-3 mt-2">
             <Button variant="secondary" onClick={close}>Cancelar</Button>
             <Button onClick={handleGuardar} disabled={guardando}>

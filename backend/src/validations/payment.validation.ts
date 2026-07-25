@@ -8,4 +8,12 @@ export const createPaymentSchema = z.object({
     notas: z.string().max(255).optional()
 });
 
+export const updatePaymentSchema = z.object({
+    monto: z.number().positive("El monto debe ser mayor a 0").optional(),
+    metodo: z.enum(['CASH', 'TRANSFER', 'CARD', 'MERCADOPAGO'], { message: "Método de pago inválido" }).optional(),
+    fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido (YYYY-MM-DD)").optional(),
+    notas: z.string().max(255).optional()
+});
+
 export type CreatePaymentType = z.infer<typeof createPaymentSchema>;
+export type UpdatePaymentType = z.infer<typeof updatePaymentSchema>;
